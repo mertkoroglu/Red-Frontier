@@ -148,7 +148,7 @@ void AMainCharacter::WaitForFire()
 
 void AMainCharacter::CheckScore()
 {
-	if (GameScore % 2 == 0 && GameScore < 600) {
+	if (GameScore % 40 == 0 && GameScore < 600) {
 		Tokens += 1;
 		//bUpgradePending = true;
 		NextLevelScore += 40;
