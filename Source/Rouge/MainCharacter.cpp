@@ -8,6 +8,8 @@
 #include "EnemySpawner.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter() :
@@ -33,6 +35,8 @@ AMainCharacter::AMainCharacter() :
 	MaxCharacterFireRateLevel(4),
 	MaxCharacterHealthLevel(2),
 	MaxCharacterShieldLevel(3),
+	TargetFieldOfView(90.f),
+	CurrentFieldOfView(90.f),
 	MaxCharacterSpeedLevel(3),
 	Tokens(0)
 {
@@ -48,6 +52,9 @@ AMainCharacter::AMainCharacter() :
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+
+	Camera = FindComponentByClass<UCameraComponent>();
 
 	if(EnemySpawnerReference)	
 		UE_LOG(LogTemp, Warning, TEXT("Yey"));
@@ -107,23 +114,24 @@ void AMainCharacter::FindMouseHit(float DeltaTime)
 
 void AMainCharacter::Fire()
 {
-	SocketName = "CannonSocket" + FString::FromInt(SocketNumber);
+	SocketName = "GunSocket" + FString::FromInt(SocketNumber);
 
 	if(!bBouncyProjectiles)
 		GetWorld()->SpawnActor<AProjectile>(GunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
 	else
 		GetWorld()->SpawnActor<AProjectile>(BouncyGunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
 
-	if (SocketNumber < 3) {
-		SocketNumber++;
+	if (SocketNumber == 2) {
+		SocketNumber = 1;
 	}
 	else {
-		SocketNumber = 0;
+		SocketNumber = 2;
 	}
 
 	bCanFire = false;
 	GetWorldTimerManager().SetTimer(TimerBetweenShots, this, &AMainCharacter::WaitForFire, GunFireSpeed, false);
-	
+	//ZoomFOV();
+	onShoot.Broadcast();
 }
 
 void AMainCharacter::FireButtonPressed()
@@ -148,7 +156,7 @@ void AMainCharacter::WaitForFire()
 
 void AMainCharacter::CheckScore()
 {
-	if (GameScore % 40 == 0 && GameScore < 600) {
+	if (GameScore % 2 == 0 && GameScore < 600) {
 		Tokens += 1;
 		//bUpgradePending = true;
 		NextLevelScore += 40;
@@ -328,6 +336,18 @@ int32 AMainCharacter::GetGameScore()
 }
 
 
+void AMainCharacter::ZoomFOV()
+{
+	TargetFieldOfView = 88.f;
+}
+
+void AMainCharacter::ReturnFOV()
+{
+	TargetFieldOfView = 90.f;
+
+}
+
+
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime)
 {
@@ -342,6 +362,18 @@ void AMainCharacter::Tick(float DeltaTime)
 		bShieldPending = true;
 		GetWorldTimerManager().SetTimer(ShieldTimer, this, &AMainCharacter::AssignShield, CharacterShieldTime, false);
 	}
+
+	//if (CurrentFieldOfView != TargetFieldOfView) {
+	//	CurrentFieldOfView = FMath::FInterpConstantTo(CurrentFieldOfView, TargetFieldOfView, DeltaTime, 12.f);
+	//	Camera->SetFieldOfView(CurrentFieldOfView);
+	//	UE_LOG(LogTemp, Warning, TEXT("%f"), CurrentFieldOfView);
+	//	if (TargetFieldOfView == CurrentFieldOfView && TargetFieldOfView == 88.f) {
+	//		ReturnFOV();
+	//	}
+	//}
+	//else if (TargetFieldOfView == 88.f && CurrentFieldOfView == 88.f) {
+	//	ReturnFOV();
+	//}
 }
 
 // Called to bind functionality to input

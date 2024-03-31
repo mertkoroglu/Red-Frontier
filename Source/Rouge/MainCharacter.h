@@ -15,6 +15,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldStateChange);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldDamaged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpgradePending);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShoot);
+
 
 UCLASS()
 class ROUGE_API AMainCharacter : public ACharacter
@@ -42,10 +44,14 @@ protected:
 	void Dash();
 	void AssignShield();
 	void RefreshDash();
+	void ZoomFOV();
+	void ReturnFOV();
 private:
 	
 	UPROPERTY(BlueprintAssignable)
 		FOnMaxHealthIncrease onMaxHealthIncrease;
+	UPROPERTY(BlueprintAssignable)
+		FOnShoot onShoot;
 	UPROPERTY(BlueprintAssignable)
 		FOnHealthDecrease onHealthDecrease;
 	UPROPERTY(BlueprintAssignable)
@@ -60,6 +66,13 @@ private:
 		FOnDeath onDeath;
 	UPROPERTY(BlueprintAssignable)
 		FOnUpgradePending onUpgradePending;
+
+
+	class UCameraComponent* Camera;
+
+	float CurrentFieldOfView;
+	float TargetFieldOfView;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class APlayerController* PlayerController;
