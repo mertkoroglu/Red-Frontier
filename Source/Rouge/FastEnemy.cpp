@@ -19,6 +19,7 @@ AFastEnemy::AFastEnemy()
 void AFastEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	MultiplySpeed();
 }
 
 void AFastEnemy::Tick(float DeltaTime)

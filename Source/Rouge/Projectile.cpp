@@ -3,6 +3,9 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "Enemy.h"
 
 // Sets default values
@@ -30,6 +33,8 @@ void AProjectile::BeginPlay()
 	if (CollisionBox) {
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
+	if (FireEmitter)
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), FireEmitter, GetActorLocation(), GetActorRotation());
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -48,6 +53,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			BounceAmount++;
 	}
 	else {
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), FireEmitter, Hit.Location, UKismetMathLibrary::MakeRotFromXY(Hit.Normal, Hit.Normal));
 		Destroy();
 	}
 }

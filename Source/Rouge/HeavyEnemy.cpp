@@ -20,6 +20,7 @@ AHeavyEnemy::AHeavyEnemy()
 void AHeavyEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	MultiplySpeed();
 }
 
 void AHeavyEnemy::Tick(float DeltaTime)

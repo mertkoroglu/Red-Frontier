@@ -24,6 +24,8 @@ protected:
 	void ResetAttack();
 	void ChasePlayer();
 	void CheckCanAttack();
+	void DestroyEnemy();
+	void MultiplySpeed();
 	// Health of the Enemy
 	float Health;
 	// Speed of the enemy.
@@ -49,12 +51,17 @@ private:
 
 	FTimerHandle AttackTimer;
 	FTimerHandle ChaseTimer;
+	FTimerHandle DieTimer;
+
 	float AttackWait;
 	bool bCanAttack;
 	float ChaseUpdateInterval;
 	float ChaseUpdateTimer;
 	float DistanceToPlayer;
 	bool bReachedPlayer;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collectables", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<class ACollectable> LevelOrb;
 
 public:	
 	// Called every frame

@@ -11,12 +11,14 @@ ABaseEnemy::ABaseEnemy()
 	Speed = 100.f;
 	EnemyPoint = 1;
 	Damage = 1.f;
+
 	SetWalkSpeed(Speed);
 }
 
 void ABaseEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	MultiplySpeed();
 }
 
 void ABaseEnemy::Tick(float DeltaTime)

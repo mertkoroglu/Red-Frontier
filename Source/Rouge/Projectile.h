@@ -29,6 +29,8 @@ private:
 		class UBoxComponent* CollisionBox;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 		class UStaticMeshComponent* Mesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraSystem* FireEmitter;
 
 	class AEnemy* Enemy;
 	int8 BounceAmount;

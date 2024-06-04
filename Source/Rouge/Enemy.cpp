@@ -7,6 +7,8 @@
 #include "AIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnemySpawner.h"
+#include "Collectable.h"
+
 // Sets default values
 AEnemy::AEnemy()
 {
@@ -26,8 +28,6 @@ AEnemy::AEnemy()
 	SetWalkSpeed(Speed);
 	Tags.Add("Enemy");
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-
-	
 }
 
 // Called when the game starts or when spawned
@@ -68,7 +68,11 @@ void AEnemy::Die()
 	/*if (EnemySpawner) {
 		EnemySpawner->RemoveFromArray(Index);
 	}*/
-	MainCharacter->SetGameScore(EnemyPoint);
+	//MainCharacter->SetGameScore(EnemyPoint);
+	GetWorldTimerManager().SetTimer(DieTimer, this, &AEnemy::DestroyEnemy, .5f, false);
+
+	GetWorld()->SpawnActor<ACollectable>(LevelOrb, FVector(GetActorLocation().X - 20.f, GetActorLocation().Y, MainCharacter->GetActorLocation().Z ), GetActorRotation(), FActorSpawnParameters());
+
 	Destroy();
 }
 
@@ -112,6 +116,26 @@ void AEnemy::CheckCanAttack()
 {
 	if (bCanAttack && bReachedPlayer)
 		Attack();
+}
+
+void AEnemy::DestroyEnemy()
+{
+	Destroy();
+}
+
+void AEnemy::MultiplySpeed()
+{
+	if (MainCharacter->GetGameScore() > 500 && MainCharacter->GetGameScore() < 800) {
+		Speed = Speed + Speed * 0.1;
+	}
+	else if (MainCharacter->GetGameScore() > 800 && MainCharacter->GetGameScore() < 1200) {
+		Speed = Speed + Speed * 0.5;
+	}
+	else if (MainCharacter->GetGameScore() > 1200) {
+		Speed = Speed + Speed;
+	}
+
+	SetWalkSpeed(Speed);
 }
 
 void AEnemy::ReceiveDamage(float Amount)

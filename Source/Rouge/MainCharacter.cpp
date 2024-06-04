@@ -8,8 +8,10 @@
 #include "EnemySpawner.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Sound/SoundCue.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "MyGameInstance.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter() :
@@ -19,9 +21,11 @@ AMainCharacter::AMainCharacter() :
 	CharacterSpeed(300.f),
 	GunFireSpeed(.5f),
 	GameScore(0),
-	NextLevelScore(40),
+	NextLevelScore(35),
+	NextLevelIncrement(35),
 	CharacterFireRateLevel(0),
 	CharacterSpeedLevel(0),
+	CharacterPullRadiusLevel(0),
 	bCanCharacterDash(false),
 	bCanFire(true),
 	CharacterShieldLevel(0),
@@ -35,9 +39,11 @@ AMainCharacter::AMainCharacter() :
 	MaxCharacterFireRateLevel(4),
 	MaxCharacterHealthLevel(2),
 	MaxCharacterShieldLevel(3),
+	MaxCharacterPullRadiusLevel(4),
 	TargetFieldOfView(90.f),
 	CurrentFieldOfView(90.f),
 	MaxCharacterSpeedLevel(3),
+	CharacterPullRadius(235.f),
 	Tokens(0)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -46,6 +52,8 @@ AMainCharacter::AMainCharacter() :
 	PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	CrosshairMesh = CreateDefaultSubobject<UStaticMeshComponent>("CrosshairMesh");
 	GetCharacterMovement()->MaxWalkSpeed = CharacterSpeed;
+
+	MyGameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 }
 
 // Called when the game starts or when spawned
@@ -60,7 +68,7 @@ void AMainCharacter::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Yey"));
 
 	AngleToMouseYaw = FRotator{ 0,0,0 };
-	SocketNumber = 0;
+	SocketNumber = 1;
 	
 }
 
@@ -131,6 +139,8 @@ void AMainCharacter::Fire()
 	bCanFire = false;
 	GetWorldTimerManager().SetTimer(TimerBetweenShots, this, &AMainCharacter::WaitForFire, GunFireSpeed, false);
 	//ZoomFOV();
+	UGameplayStatics::PlaySound2D(GetWorld(), FireSound);
+
 	onShoot.Broadcast();
 }
 
@@ -156,14 +166,15 @@ void AMainCharacter::WaitForFire()
 
 void AMainCharacter::CheckScore()
 {
-	if (GameScore % 2 == 0 && GameScore < 600) {
+	if (GameScore - NextLevelScore == 0) {
 		Tokens += 1;
 		//bUpgradePending = true;
-		NextLevelScore += 40;
+		NextLevelScore += NextLevelIncrement;
+		NextLevelIncrement = NextLevelIncrement + 5;
 		onUpgradePending.Broadcast();
 	}
 
-	if ((GameScore % 24 == 0 && GameScore < 200) || (GameScore % 200 == 0 && GameScore > 800)) {
+	if ((GameScore % 24 == 0 && GameScore < 200) || (GameScore % 80 == 0 && GameScore > 800)) {
 		EnemySpawnerReference->IncreaseSpeedOfGame();
 	}
 }
@@ -177,7 +188,7 @@ void AMainCharacter::Dash()
 {
 	if (bCanCharacterDash) {
 		//const FVector ForwardDir = this->GetActorRotation().Vector();
-		LaunchCharacter(GetActorForwardVector() * 500.f , true, true);
+		LaunchCharacter(GetActorForwardVector() * 1000.f , true, true);
 		bCanCharacterDash = false;
 		GetWorldTimerManager().SetTimer(DashTimer, this, &AMainCharacter::RefreshDash, 2.f, false);
 	}
@@ -250,6 +261,30 @@ void AMainCharacter::AddBouncyProjectiles()
 	bBouncyProjectiles = true;
 }
 
+void AMainCharacter::IncreasePullRadius()
+{
+	switch (CharacterPullRadiusLevel) {
+	case 0:
+		CharacterPullRadius = 290.f;
+		break;
+	case 1:
+		CharacterPullRadius = 335.f;
+		break;
+	case 2:
+		CharacterPullRadius = 400.f;
+		break;
+	case 3:
+		CharacterPullRadius = 450.f;
+		break;
+	default:
+		break;
+	}
+
+	CharacterPullRadiusLevel++;
+	onPullRadiusChanged.Broadcast();
+
+}
+
 void AMainCharacter::SetTokens(int32 val)
 {
 	Tokens -= val;
@@ -304,6 +339,11 @@ void AMainCharacter::AddThreeDirectionShooting()
 	// TO-DO
 }
 
+float AMainCharacter::GetCharacterPullRadius()
+{
+	return CharacterPullRadius;
+}
+
 
 void AMainCharacter::ReceiveDamage(float Amount)
 {
@@ -315,6 +355,11 @@ void AMainCharacter::ReceiveDamage(float Amount)
 		Health -= Amount;
 		onHealthDecrease.Broadcast();
 		if (Health == 0.f) {
+			if (MyGameInstance) {
+				if (GameScore > MyGameInstance->GetHighScore()) {
+					MyGameInstance->SetHighScore(GameScore);
+				}
+			}
 			onDeath.Broadcast();
 		}
 	}
@@ -331,7 +376,6 @@ void AMainCharacter::SetGameScore(int Value)
 
 int32 AMainCharacter::GetGameScore()
 {
-
 	return GameScore;
 }
 
@@ -362,18 +406,6 @@ void AMainCharacter::Tick(float DeltaTime)
 		bShieldPending = true;
 		GetWorldTimerManager().SetTimer(ShieldTimer, this, &AMainCharacter::AssignShield, CharacterShieldTime, false);
 	}
-
-	//if (CurrentFieldOfView != TargetFieldOfView) {
-	//	CurrentFieldOfView = FMath::FInterpConstantTo(CurrentFieldOfView, TargetFieldOfView, DeltaTime, 12.f);
-	//	Camera->SetFieldOfView(CurrentFieldOfView);
-	//	UE_LOG(LogTemp, Warning, TEXT("%f"), CurrentFieldOfView);
-	//	if (TargetFieldOfView == CurrentFieldOfView && TargetFieldOfView == 88.f) {
-	//		ReturnFOV();
-	//	}
-	//}
-	//else if (TargetFieldOfView == 88.f && CurrentFieldOfView == 88.f) {
-	//	ReturnFOV();
-	//}
 }
 
 // Called to bind functionality to input

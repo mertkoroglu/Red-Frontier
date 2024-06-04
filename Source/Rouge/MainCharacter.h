@@ -16,6 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldDamaged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpgradePending);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShoot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPullRadiusChanged);
 
 
 UCLASS()
@@ -67,6 +68,9 @@ private:
 	UPROPERTY(BlueprintAssignable)
 		FOnUpgradePending onUpgradePending;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		class USoundCue* FireSound;
+
 
 	class UCameraComponent* Camera;
 
@@ -117,6 +121,7 @@ private:
 	float GunFireSpeed;
 
 	float CharacterSpeed;
+	float CharacterPullRadius;
 
 	bool bCharacterHaveShieldUpgrade;
 	bool bCharacterHaveActiveShield;
@@ -127,6 +132,7 @@ private:
 
 	// Score of the Game. Affects Enemy difficulty percentage and overall game speed.
 	int32 GameScore;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemySpawnerReferences", meta = (AllowPrivateAccess = "true"))
 		TSoftObjectPtr<class AEnemySpawner> EnemySpawnerReference;
 
@@ -145,8 +151,10 @@ private:
 		int32 CharacterHealthLevel;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
 		int32 CharacterDirectionalShootingLevel;
-
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
+		int32 CharacterPullRadiusLevel;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
+		int32 MaxCharacterPullRadiusLevel;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
 		int32 MaxCharacterFireRateLevel;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
@@ -155,15 +163,17 @@ private:
 		int32 MaxCharacterShieldLevel;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Attributes", meta = (AllowPrivateAccess = "true"))
 		int32 MaxCharacterHealthLevel;
-
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget Attributes", meta = (AllowPrivateAccess = "true"))
 		int32 NextLevelScore;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget Attributes", meta = (AllowPrivateAccess = "true"))
+		int32 NextLevelIncrement;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Tokens", meta = (AllowPrivateAccess = "true"))
 		int32 Tokens;
 
 	bool bCanFire;
+	class UMyGameInstance* MyGameInstance;
 
 public:	
 	// Called every frame
@@ -176,24 +186,31 @@ public:
 	void SetGameScore(int Value);
 	// Returns the GameScore.
 	UFUNCTION(BlueprintCallable)
-	int32 GetGameScore();
-
+		int32 GetGameScore();
 
 	// Below are the functions for handling upgrades
 	UFUNCTION(BlueprintCallable)
-	void IncreaseCharacterSpeed();
+		void IncreaseCharacterSpeed();
 	UFUNCTION(BlueprintCallable)
-	void IncreaseProjectileRate();
+		void IncreaseProjectileRate();
 	UFUNCTION(BlueprintCallable)
-	void AddShield();
+		void AddShield();
 	UFUNCTION(BlueprintCallable)
-	void IncreaseHealth();
-	void AddThreeDirectionShooting();
+		void IncreaseHealth();
 	UFUNCTION(BlueprintCallable)
-	void AddDashing();
+		void AddDashing();
 	UFUNCTION(BlueprintCallable)
-	void AddBouncyProjectiles();
-
+		void AddBouncyProjectiles();
+	UFUNCTION(BlueprintCallable)
+		void IncreasePullRadius();
 	UFUNCTION(BlueprintCallable)
 		void SetTokens(int32 val);
+
+	void AddThreeDirectionShooting();
+
+
+	UPROPERTY(BlueprintAssignable)
+		FOnPullRadiusChanged onPullRadiusChanged;
+	UFUNCTION(BlueprintCallable)
+		float GetCharacterPullRadius();
 };
