@@ -70,6 +70,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		class USoundCue* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		class USoundCue* OrbSound;
 
 
 	class UCameraComponent* Camera;

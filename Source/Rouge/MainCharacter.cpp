@@ -63,10 +63,6 @@ void AMainCharacter::BeginPlay()
 
 
 	Camera = FindComponentByClass<UCameraComponent>();
-
-	if(EnemySpawnerReference)	
-		UE_LOG(LogTemp, Warning, TEXT("Yey"));
-
 	AngleToMouseYaw = FRotator{ 0,0,0 };
 	SocketNumber = 1;
 	
@@ -370,6 +366,7 @@ void AMainCharacter::SetGameScore(int Value)
 
 	GameScore += Value;
 	onGameScoreChange.Broadcast();
+	UGameplayStatics::PlaySound2D(GetWorld(), OrbSound);
 
 	CheckScore();
 }

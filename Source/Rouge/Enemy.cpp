@@ -7,6 +7,8 @@
 #include "AIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnemySpawner.h"
+#include "Components/CapsuleComponent.h"
+#include "Materials/Material.h"
 #include "Collectable.h"
 
 // Sets default values
@@ -24,6 +26,8 @@ AEnemy::AEnemy()
 	ChaseUpdateTimer = 0.f;
 	bCanAttack = true;
 	bReachedPlayer = false;
+	bDead = false;
+	bHitFlash = false;
 
 	SetWalkSpeed(Speed);
 	Tags.Add("Enemy");
@@ -36,6 +40,7 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 	MainCharacter = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	AI = Cast<AAIController>(GetController());
+	SetDynamicMaterial();
 	ChasePlayer();
 }
 
@@ -65,15 +70,19 @@ void AEnemy::Attack()
 
 void AEnemy::Die()
 {
-	/*if (EnemySpawner) {
-		EnemySpawner->RemoveFromArray(Index);
-	}*/
-	//MainCharacter->SetGameScore(EnemyPoint);
+	bDead = true;
+	GetWorld()->SpawnActor<ACollectable>(LevelOrb, FVector(GetActorLocation().X - 20.f, GetActorLocation().Y, MainCharacter->GetActorLocation().Z), GetActorRotation(), FActorSpawnParameters());
+	SetWalkSpeed(0.f);
+	StartHitFlash();
+	if (AI) {
+		AI->StopMovement();
+	}
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	GetWorldTimerManager().ClearTimer(ChaseTimer);
 	GetWorldTimerManager().SetTimer(DieTimer, this, &AEnemy::DestroyEnemy, .5f, false);
-
-	GetWorld()->SpawnActor<ACollectable>(LevelOrb, FVector(GetActorLocation().X - 20.f, GetActorLocation().Y, MainCharacter->GetActorLocation().Z ), GetActorRotation(), FActorSpawnParameters());
-
-	Destroy();
 }
 
 void AEnemy::SetEnemySpawner(AEnemySpawner* Ref)
@@ -99,17 +108,19 @@ void AEnemy::ResetAttack()
 
 void AEnemy::ChasePlayer()
 {
-	 AI->MoveToLocation(MainCharacter->GetActorLocation(), 50.f, true);
-	 DistanceToPlayer = FVector::Distance(MainCharacter->GetActorLocation(), GetActorLocation());
-	 if (DistanceToPlayer <= 75.f) {
-		 bReachedPlayer = true;
-		 CheckCanAttack();
-	 }
-	 else {
-		 bReachedPlayer = false;
-	 }
+	if (bDead == false) {
+		AI->MoveToLocation(MainCharacter->GetActorLocation(), 50.f, true);
+		DistanceToPlayer = FVector::Distance(MainCharacter->GetActorLocation(), GetActorLocation());
+		if (DistanceToPlayer <= 75.f) {
+			bReachedPlayer = true;
+			CheckCanAttack();
+		}
+		else {
+			bReachedPlayer = false;
+		}
 
-	 GetWorldTimerManager().SetTimer(ChaseTimer, this, &AEnemy::ChasePlayer, 0.1f, false);
+		GetWorldTimerManager().SetTimer(ChaseTimer, this, &AEnemy::ChasePlayer, 0.1f, false);
+	}
 }
 
 void AEnemy::CheckCanAttack()
@@ -138,11 +149,41 @@ void AEnemy::MultiplySpeed()
 	SetWalkSpeed(Speed);
 }
 
+void AEnemy::SetFlash()
+{
+	const float val = GetWorldTimerManager().GetTimerElapsed(HitFlashTimer);
+	float CurveValue = HitFlashCurve->GetFloatValue(val);
+	DynMaterial->SetScalarParameterValue(TEXT("EmissiveValue"), CurveValue);
+}
+
+void AEnemy::StartHitFlash()
+{
+	if (HitFlashCurve) {
+		bHitFlash = true;
+		GetWorldTimerManager().SetTimer(HitFlashTimer, this, &AEnemy::EndHitFlash, 1.f, false);
+	}
+}
+
+void AEnemy::SetDynamicMaterial()
+{
+	Material = GetMesh()->GetMaterial(2);
+	DynMaterial = UMaterialInstanceDynamic::Create(Material, this);
+	GetMesh()->SetMaterial(2, DynMaterial);
+}
+
+void AEnemy::EndHitFlash()
+{
+	bHitFlash = false;
+}
+
 void AEnemy::ReceiveDamage(float Amount)
 {
 	Health -= Amount;
 	if (Health <= 0) {
 		Die();
+	}
+	else {
+		StartHitFlash();
 	}
 }
 
@@ -150,6 +191,10 @@ void AEnemy::ReceiveDamage(float Amount)
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bHitFlash) {
+		SetFlash();
+	}
 }
 
 // Called to bind functionality to input

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
+
 UCLASS()
 class ROUGE_API AEnemy : public ACharacter
 {
@@ -26,6 +27,11 @@ protected:
 	void CheckCanAttack();
 	void DestroyEnemy();
 	void MultiplySpeed();
+	void SetFlash();
+	void StartHitFlash();
+	void EndHitFlash();
+	void SetDynamicMaterial();
+
 	// Health of the Enemy
 	float Health;
 	// Speed of the enemy.
@@ -34,6 +40,7 @@ protected:
 	int32 EnemyPoint;
 	// Damage amount of the enemy
 	float Damage;
+
 private:
 
 	// Hit result of attack action
@@ -59,9 +66,19 @@ private:
 	float ChaseUpdateTimer;
 	float DistanceToPlayer;
 	bool bReachedPlayer;
+	bool bHitFlash;
+	bool bDead;
+	FTimerHandle HitFlashTimer;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collectables", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<class ACollectable> LevelOrb;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Curves", meta = (AllowPrivateAccess = "true"))
+		class UCurveFloat* HitFlashCurve;
+
+	class UMaterialInterface* Material;
+	class UMaterialInstanceDynamic* DynMaterial;
 
 public:	
 	// Called every frame
