@@ -47,6 +47,17 @@ protected:
 	void RefreshDash();
 	void ZoomFOV();
 	void ReturnFOV();
+
+	void SetFlash();
+	void StartHitFlash();
+	void EndHitFlash();
+	void SetDynamicMaterial();
+
+	void SetCameraPP();
+	void StartCameraPP();
+	void EndCameraPP();
+	void Die();
+	void PrepareDeath();
 private:
 	
 	UPROPERTY(BlueprintAssignable)
@@ -72,12 +83,24 @@ private:
 		class USoundCue* FireSound;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
 		class USoundCue* OrbSound;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		class USoundCue* DamageSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sounds", meta = (AllowPrivateAccess = "true"))
+		class USoundCue* DeathSound;
 
 	class UCameraComponent* Camera;
 
 	float CurrentFieldOfView;
 	float TargetFieldOfView;
+
+
+	bool bHitFlash;
+	bool bCameraPPActive;
+	FTimerHandle HitFlashTimer;
+	FTimerHandle CameraPPDeathTimer;
+	FTimerHandle CameraPPTimer;
+	FTimerHandle DieTimer;
+
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -129,6 +152,7 @@ private:
 	bool bCharacterHaveActiveShield;
 	// There is a timer asigned for new shield.
 	bool bShieldPending;
+	bool bDead;
 	FTimerHandle ShieldTimer;
 	float CharacterShieldTime;
 
@@ -177,6 +201,17 @@ private:
 	bool bCanFire;
 	class UMyGameInstance* MyGameInstance;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Curves", meta = (AllowPrivateAccess = "true"))
+		class UCurveFloat* HitFlashCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Curves", meta = (AllowPrivateAccess = "true"))
+		class UCurveFloat* CameraPPDeathCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Curves", meta = (AllowPrivateAccess = "true"))
+		class UCurveFloat* CameraPPCurve;
+
+	class UMaterialInterface* Material;
+	class UMaterialInstanceDynamic* DynMaterial;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -215,4 +250,6 @@ public:
 		FOnPullRadiusChanged onPullRadiusChanged;
 	UFUNCTION(BlueprintCallable)
 		float GetCharacterPullRadius();
+	UFUNCTION(BlueprintCallable)
+		bool GetDeadStatus();
 };

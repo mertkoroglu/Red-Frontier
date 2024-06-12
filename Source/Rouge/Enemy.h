@@ -40,7 +40,8 @@ protected:
 	int32 EnemyPoint;
 	// Damage amount of the enemy
 	float Damage;
-
+	float TraceLength;
+	float TargetDistanceToCharacter;
 private:
 
 	// Hit result of attack action

@@ -28,6 +28,8 @@ AEnemy::AEnemy()
 	bReachedPlayer = false;
 	bDead = false;
 	bHitFlash = false;
+	TraceLength = 50.f;
+	TargetDistanceToCharacter = 75.f;
 
 	SetWalkSpeed(Speed);
 	Tags.Add("Enemy");
@@ -52,7 +54,7 @@ void AEnemy::DealDamage()
 void AEnemy::Attack()
 {
 	TraceStart = GetActorLocation();
-	TraceEnd = GetActorLocation() + GetActorForwardVector() * 50.f;
+	TraceEnd = GetActorLocation() + GetActorForwardVector() * TraceLength;
 
 	QueryParams.AddIgnoredActor(this);
 
@@ -108,24 +110,32 @@ void AEnemy::ResetAttack()
 
 void AEnemy::ChasePlayer()
 {
-	if (bDead == false) {
-		AI->MoveToLocation(MainCharacter->GetActorLocation(), 50.f, true);
+	if (bDead == false && MainCharacter->GetDeadStatus() == false) {
+		AI->MoveToLocation(MainCharacter->GetActorLocation(), TargetDistanceToCharacter - 50.f, true);
 		DistanceToPlayer = FVector::Distance(MainCharacter->GetActorLocation(), GetActorLocation());
-		if (DistanceToPlayer <= 75.f) {
+		if (DistanceToPlayer <= TargetDistanceToCharacter) {
 			bReachedPlayer = true;
 			CheckCanAttack();
 		}
 		else {
 			bReachedPlayer = false;
+
 		}
 
 		GetWorldTimerManager().SetTimer(ChaseTimer, this, &AEnemy::ChasePlayer, 0.1f, false);
+	}
+	else if (MainCharacter->GetDeadStatus() == true) {
+		SetWalkSpeed(0.f);
+		if (AI) {
+			AI->StopMovement();
+		}
+
 	}
 }
 
 void AEnemy::CheckCanAttack()
 {
-	if (bCanAttack && bReachedPlayer)
+	if (bCanAttack && bReachedPlayer && MainCharacter->GetDeadStatus() == false)
 		Attack();
 }
 

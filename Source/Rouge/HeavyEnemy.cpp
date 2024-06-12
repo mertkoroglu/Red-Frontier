@@ -13,6 +13,8 @@ AHeavyEnemy::AHeavyEnemy()
 	Speed = 65.f;
 	EnemyPoint = 1;
 	Damage = 3.f;
+	TraceLength = 110.f;
+	TargetDistanceToCharacter = 110.f;
 
 	SetWalkSpeed(Speed);
 }

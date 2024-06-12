@@ -12,6 +12,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "MyGameInstance.h"
+#include "Materials/Material.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter() :
@@ -44,7 +46,8 @@ AMainCharacter::AMainCharacter() :
 	CurrentFieldOfView(90.f),
 	MaxCharacterSpeedLevel(3),
 	CharacterPullRadius(235.f),
-	Tokens(0)
+	Tokens(0),
+	bDead(false)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -54,6 +57,7 @@ AMainCharacter::AMainCharacter() :
 	GetCharacterMovement()->MaxWalkSpeed = CharacterSpeed;
 
 	MyGameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +69,12 @@ void AMainCharacter::BeginPlay()
 	Camera = FindComponentByClass<UCameraComponent>();
 	AngleToMouseYaw = FRotator{ 0,0,0 };
 	SocketNumber = 1;
-	
+	SetDynamicMaterial();
+
+
+	if (Camera) {
+		Camera->SetPostProcessBlendWeight(0.f);
+	}
 }
 
 void AMainCharacter::MoveForward(float Value)
@@ -340,6 +349,11 @@ float AMainCharacter::GetCharacterPullRadius()
 	return CharacterPullRadius;
 }
 
+bool AMainCharacter::GetDeadStatus()
+{
+	return bDead;
+}
+
 
 void AMainCharacter::ReceiveDamage(float Amount)
 {
@@ -356,9 +370,14 @@ void AMainCharacter::ReceiveDamage(float Amount)
 					MyGameInstance->SetHighScore(GameScore);
 				}
 			}
-			onDeath.Broadcast();
+			PrepareDeath();
 		}
 	}
+
+
+	StartHitFlash();
+	UGameplayStatics::PlaySound2D(GetWorld(), DamageSound);
+	StartCameraPP();
 }
 
 void AMainCharacter::SetGameScore(int Value)
@@ -388,6 +407,88 @@ void AMainCharacter::ReturnFOV()
 
 }
 
+void AMainCharacter::SetFlash()
+{
+	const float val = GetWorldTimerManager().GetTimerElapsed(HitFlashTimer);
+	float CurveValue = HitFlashCurve->GetFloatValue(val);
+	DynMaterial->SetScalarParameterValue(TEXT("EmissiveValue"), CurveValue);
+}
+
+void AMainCharacter::StartHitFlash()
+{
+	if (HitFlashCurve) {
+		bHitFlash = true;
+		GetWorldTimerManager().SetTimer(HitFlashTimer, this, &AMainCharacter::EndHitFlash, 1.f, false);
+	}
+}
+
+void AMainCharacter::SetDynamicMaterial()
+{
+	Material = GetMesh()->GetMaterial(2);
+	DynMaterial = UMaterialInstanceDynamic::Create(Material, this);
+	GetMesh()->SetMaterial(2, DynMaterial);
+}
+
+void AMainCharacter::SetCameraPP()
+{
+	if (!bDead) {
+		const float val = GetWorldTimerManager().GetTimerElapsed(CameraPPTimer);
+		float CurveValue = CameraPPCurve->GetFloatValue(val);
+		Camera->SetPostProcessBlendWeight(CurveValue);
+	}
+	else {
+		const float val = GetWorldTimerManager().GetTimerElapsed(CameraPPDeathTimer);
+		float CurveValue = CameraPPDeathCurve->GetFloatValue(val);
+		Camera->SetPostProcessBlendWeight(CurveValue);
+	}
+
+}
+
+void AMainCharacter::StartCameraPP()
+{
+	if (bDead) {
+		if (CameraPPDeathCurve) {
+			bCameraPPActive = true;
+			GetWorldTimerManager().SetTimer(CameraPPDeathTimer, this, &AMainCharacter::EndCameraPP, 1.f, false);
+		}
+	}
+	else {
+		if (CameraPPCurve) {
+			bCameraPPActive = true;
+			GetWorldTimerManager().SetTimer(CameraPPTimer, this, &AMainCharacter::EndCameraPP, 1.f, false);
+		}
+	}
+	
+}
+
+void AMainCharacter::EndCameraPP()
+{
+	bCameraPPActive = false;
+}
+
+void AMainCharacter::Die()
+{
+	onDeath.Broadcast();
+}
+
+void AMainCharacter::PrepareDeath()
+{
+	bDead = true;
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	GetCharacterMovement()->MaxWalkSpeed = 0.f;
+	GetCharacterMovement()->DisableMovement();
+
+	UGameplayStatics::PlaySound2D(GetWorld(), DeathSound);
+
+	GetWorldTimerManager().SetTimer(DieTimer, this, &AMainCharacter::Die, 3.f, false);
+}
+
+void AMainCharacter::EndHitFlash()
+{
+	bHitFlash = false;
+}
 
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime)
@@ -403,6 +504,16 @@ void AMainCharacter::Tick(float DeltaTime)
 		bShieldPending = true;
 		GetWorldTimerManager().SetTimer(ShieldTimer, this, &AMainCharacter::AssignShield, CharacterShieldTime, false);
 	}
+
+	if (bHitFlash) {
+		SetFlash();
+	}
+
+	if (bCameraPPActive) {
+		SetCameraPP();
+	}
+
+
 }
 
 // Called to bind functionality to input
