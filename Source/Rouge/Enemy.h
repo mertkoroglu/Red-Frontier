@@ -81,6 +81,13 @@ private:
 	class UMaterialInterface* Material;
 	class UMaterialInstanceDynamic* DynMaterial;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		class UAnimMontage* AttackMontage;
+
+	class UAnimInstance* AnimInstance; 
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

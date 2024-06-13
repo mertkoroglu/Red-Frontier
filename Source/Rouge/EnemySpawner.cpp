@@ -9,6 +9,8 @@
 #include "MainCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SceneComponent.h"
+#include "NavigationSystem.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
 AEnemySpawner::AEnemySpawner():
@@ -16,8 +18,6 @@ AEnemySpawner::AEnemySpawner():
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-
 }
 
 // Called when the game starts or when spawned
@@ -26,67 +26,67 @@ void AEnemySpawner::BeginPlay()
 	Super::BeginPlay();
 
 	MainCharacter = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	SpawnEnemy();
+    NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+
+    if(NavSys)
+	    SpawnEnemy();
 }
 
 void AEnemySpawner::SpawnEnemy()
 {
-	// 1 => Bulk of enemies will spawn in front of character
-	// 2 => Bulk of Enemies will spawn in ramdom locations on map
-	// SpawnOption = FMath::RandRange(1, 2);
-	SpawnOption = 2;
+    FVector ActorLocation = MainCharacter->GetActorLocation();
+    FVector ActorForwardVector = MainCharacter->GetActorForwardVector();
 
-	FVector ActorLocation = MainCharacter->GetActorLocation();
-	FVector ActorForwardVector = MainCharacter->GetActorForwardVector();
+    const float NavigableRadius = 1200.f;
 
-	const float DistanceBetweenPoints = 100.0f; // Adjust this based on your requirements
-	const int32 NumPoints = 10;
+    const float MinDistanceFromCharacterX = 750.f; // Optimal value for this is 450.f, but if we enter the optimum, the points are not goin to be uniform
+    const float MinDistanceFromCharacterY = 750.f;
 
-	/*for (int32 i = 0; i < NumPoints; ++i)
-	{
-		//FVector PointLocation = ActorLocation + i * DistanceBetweenPoints * ActorForwardVector;
-		FVector PointLocation = FVector(ActorLocation.X + ActorForwardVector.Y * i * 40.f + ActorForwardVector.X * 550.f, ActorLocation.Y + ActorForwardVector.X * i * 40.f + ActorForwardVector.Y * 1100.f, 33.f);
+    if (NavSys)
+    {
+        for (int32 i = 0; i < 100; ++i)
+        {
+            FVector RandomPoint;
+            if (NavSys->K2_GetRandomReachablePointInRadius(GetWorld(), ActorLocation, RandomPoint, NavigableRadius))
+            {
+                if (
+                    FMath::Abs(RandomPoint.X - ActorLocation.X) >= MinDistanceFromCharacterX || FMath::Abs(RandomPoint.Y - ActorLocation.Y) >= MinDistanceFromCharacterY)
+                {
+                    SpawnLocations.Add(RandomPoint);
+                    
+                    /*if (GEngine)
+                    {
+                        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Valid Point: %s"), *RandomPoint.ToString()));
+                        DrawDebugPoint(GetWorld(), RandomPoint, 10.0f, FColor::Green, false, 5.0f);
+                    }*/
+                }
+            }
+        }
+    }
 
+    if (SpawnLocations.Num() > 0)
+    {
+        RandomIndex = FMath::RandRange(1, 15);
 
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Point %d: %s"), i, *PointLocation.ToString()));
-			DrawDebugPoint(GetWorld(), PointLocation, 10.0f, FColor::Green, false, 5.0f);
-		}
-	}*/
+        FVector SpawnLocation = SpawnLocations[FMath::RandRange(0, SpawnLocations.Num() - 1)];
 
-	if (SpawnOption == 1) {
-		
-	}
-	else {
-		for (float i = 1300.f; i > -1300.f; i -= 100) {
-			SpawnLocations.Add(FVector(MainCharacter->GetActorLocation().X + 550.f, MainCharacter->GetActorLocation().Y + i, 33.f));
-			SpawnLocations.Add(FVector(MainCharacter->GetActorLocation().X + -550.f, MainCharacter->GetActorLocation().Y + i, 33.f));
-		}
+        if (RandomIndex >= 1 && RandomIndex <= 7)
+        {
+            GetWorld()->SpawnActor<AFastEnemy>(FastEnemy, SpawnLocation, FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
+        }
+        else if (RandomIndex > 7 && RandomIndex <= 13)
+        {
+            GetWorld()->SpawnActor<ABaseEnemy>(BaseEnemy, SpawnLocation, FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
+        }
+        else
+        {
+            GetWorld()->SpawnActor<AHeavyEnemy>(HeavyEnemy, SpawnLocation, FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
+        }
+    }
 
-		for (float i = 550.f; i > -550.f; i -= 60) {
-			SpawnLocations.Add(FVector(MainCharacter->GetActorLocation().X + i, MainCharacter->GetActorLocation().Y + 1300.f, 33.f));
-			SpawnLocations.Add(FVector(MainCharacter->GetActorLocation().X + i, MainCharacter->GetActorLocation().Y + -1300.f, 33.f));
-		}
-	}
+    SpawnLocations.Empty();
 
-	
-
-	RandomIndex = FMath::RandRange(1, 15); 
-
-
-	if (RandomIndex >= 1 && RandomIndex <= 7) {
-		GetWorld()->SpawnActor<AFastEnemy>(FastEnemy, SpawnLocations[FMath::RandRange(0, SpawnLocations.Num() - 1)], FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
-	}else if(RandomIndex > 7 && RandomIndex <= 13) {
-		GetWorld()->SpawnActor<ABaseEnemy>(BaseEnemy, SpawnLocations[FMath::RandRange(0, SpawnLocations.Num() - 1)], FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
-	}
-	else {
-		GetWorld()->SpawnActor<AHeavyEnemy>(HeavyEnemy, SpawnLocations[FMath::RandRange(0, SpawnLocations.Num() - 1)], FRotator(0.f, 90.f, 0.f), FActorSpawnParameters());
-	}
-
-	SpawnLocations.Empty();
-	
-	WaitForSpawn();
+    WaitForSpawn();
 }
 
 void AEnemySpawner::WaitForSpawn()

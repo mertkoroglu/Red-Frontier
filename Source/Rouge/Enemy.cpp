@@ -44,6 +44,8 @@ void AEnemy::BeginPlay()
 	AI = Cast<AAIController>(GetController());
 	SetDynamicMaterial();
 	ChasePlayer();
+
+	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
 void AEnemy::DealDamage()
@@ -53,6 +55,17 @@ void AEnemy::DealDamage()
 
 void AEnemy::Attack()
 {
+	// Play Attack Montage
+	if (AnimInstance)
+	{
+		if (!AnimInstance->GetCurrentActiveMontage()) {
+			if (AttackMontage) {
+				AnimInstance->Montage_Play(AttackMontage);
+				AnimInstance->Montage_JumpToSection(FName("AttackStart"));
+			}
+		}
+	}
+
 	TraceStart = GetActorLocation();
 	TraceEnd = GetActorLocation() + GetActorForwardVector() * TraceLength;
 
@@ -60,7 +73,7 @@ void AEnemy::Attack()
 
 	GetWorld()->LineTraceSingleByChannel(AttackHit, TraceStart, TraceEnd, ECC_Camera, QueryParams);
 
-	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Blue, false, .1f, 0, 10.0f);
+	//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Blue, false, .1f, 0, 10.0f);
 
 	if (AttackHit.bBlockingHit && AttackHit.GetActor()->ActorHasTag("Character")) {
 		DealDamage();
@@ -132,6 +145,9 @@ void AEnemy::ChasePlayer()
 
 	}
 }
+
+
+
 
 void AEnemy::CheckCanAttack()
 {

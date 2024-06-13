@@ -36,6 +36,7 @@ private:
 	TArray<class USceneComponent> SceneComps;
 
 	class AMainCharacter* MainCharacter;
+	class UNavigationSystemV1* NavSys;
 
 	// TODO: Add Enemy Spawn chance 
 public:	
