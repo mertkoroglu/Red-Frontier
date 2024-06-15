@@ -316,7 +316,6 @@ void AMainCharacter::AddShield()
 	}
 
 	CharacterShieldLevel++;
-
 }
 
 void AMainCharacter::IncreaseHealth()
@@ -525,7 +524,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMainCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AMainCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AMainCharacter::FireButtonReleased);
-	PlayerInputComponent->BindAction("EKey", IE_Pressed, this, &AMainCharacter::AddDashing);
+	//PlayerInputComponent->BindAction("EKey", IE_Pressed, this, &AMainCharacter::AddDashing);
 	PlayerInputComponent->BindAction("SpaceBar", IE_Pressed, this, &AMainCharacter::Dash);
 }
 
