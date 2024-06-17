@@ -127,26 +127,28 @@ void AMainCharacter::FindMouseHit(float DeltaTime)
 
 void AMainCharacter::Fire()
 {
-	SocketName = "GunSocket" + FString::FromInt(SocketNumber);
+	if (!bDead) {
+		SocketName = "GunSocket" + FString::FromInt(SocketNumber);
 
-	if(!bBouncyProjectiles)
-		GetWorld()->SpawnActor<AProjectile>(GunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
-	else
-		GetWorld()->SpawnActor<AProjectile>(BouncyGunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
+		if (!bBouncyProjectiles)
+			GetWorld()->SpawnActor<AProjectile>(GunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
+		else
+			GetWorld()->SpawnActor<AProjectile>(BouncyGunProjectile, GetMesh()->GetSocketLocation(FName(SocketName)), GetMesh()->GetSocketRotation(FName(SocketName)), FActorSpawnParameters());
 
-	if (SocketNumber == 2) {
-		SocketNumber = 1;
+		if (SocketNumber == 2) {
+			SocketNumber = 1;
+		}
+		else {
+			SocketNumber = 2;
+		}
+
+		bCanFire = false;
+		GetWorldTimerManager().SetTimer(TimerBetweenShots, this, &AMainCharacter::WaitForFire, GunFireSpeed, false);
+		//ZoomFOV();
+		UGameplayStatics::PlaySound2D(GetWorld(), FireSound);
+
+		onShoot.Broadcast();
 	}
-	else {
-		SocketNumber = 2;
-	}
-
-	bCanFire = false;
-	GetWorldTimerManager().SetTimer(TimerBetweenShots, this, &AMainCharacter::WaitForFire, GunFireSpeed, false);
-	//ZoomFOV();
-	UGameplayStatics::PlaySound2D(GetWorld(), FireSound);
-
-	onShoot.Broadcast();
 }
 
 void AMainCharacter::FireButtonPressed()
@@ -496,7 +498,7 @@ void AMainCharacter::Tick(float DeltaTime)
 	FindMouseHit(DeltaTime);
 
 	if (CrosshairMesh) {
-		CrosshairMesh->SetWorldLocation(FVector(MouseHitLoc.X, MouseHitLoc.Y, 1.f));
+		CrosshairMesh->SetWorldLocation(FVector(MouseHitLoc.X, MouseHitLoc.Y, MouseHitLoc.Z + 5.f));
 	}
 
 	if (bCharacterHaveShieldUpgrade && bCharacterHaveActiveShield == false && bShieldPending == false) {

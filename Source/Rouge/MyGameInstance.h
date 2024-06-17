@@ -26,8 +26,16 @@ public:
     UFUNCTION(BlueprintCallable, Category = "SaveGame")
         void LoadGame();
 
+    UFUNCTION(BlueprintCallable, Category = "SaveGame")
+        bool GetGameLoaded();
+
+    UFUNCTION(BlueprintCallable, Category = "SaveGame")
+        void SetGameLoaded();
+
+
 private:
-    void InitializeHighScoreFromSaveGame();
+    void InitializeSaveGame();
 
     int32 HighScore;
+    bool bGameFirstLoaded;
 };

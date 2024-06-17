@@ -5,4 +5,5 @@
 UMySaveGame::UMySaveGame()
 {
     HighScore = 0;
+    bGameFirstLoaded = false;
 }

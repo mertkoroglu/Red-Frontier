@@ -16,4 +16,7 @@ public:
 
     UPROPERTY(VisibleAnywhere, Category = Basic)
         int32 HighScore;
+
+    UPROPERTY(VisibleAnywhere, Category = Basic)
+        bool bGameFirstLoaded;
 };

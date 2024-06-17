@@ -4,10 +4,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "MySaveGame.h"
 
-UMyGameInstance::UMyGameInstance()
-    : HighScore(0)
+UMyGameInstance::UMyGameInstance(): 
+    HighScore(0),
+    bGameFirstLoaded(false)
 {
-    InitializeHighScoreFromSaveGame();
+    InitializeSaveGame();
 }
 
 int32 UMyGameInstance::GetHighScore()
@@ -27,20 +28,33 @@ void UMyGameInstance::SaveGame()
     if (SaveGameInstance)
     {
         SaveGameInstance->HighScore = HighScore;
-        UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("HighScoreSlot"), 0);
+        SaveGameInstance->bGameFirstLoaded = bGameFirstLoaded;
+        UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("SaveGameSlot"), 0);
     }
 }
 
 void UMyGameInstance::LoadGame()
 {
-    UMySaveGame* LoadGameInstance = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("HighScoreSlot"), 0));
+    UMySaveGame* LoadGameInstance = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("SaveGameSlot"), 0));
     if (LoadGameInstance)
     {
         HighScore = LoadGameInstance->HighScore;
+        bGameFirstLoaded = LoadGameInstance->bGameFirstLoaded;
     }
 }
 
-void UMyGameInstance::InitializeHighScoreFromSaveGame()
+bool UMyGameInstance::GetGameLoaded()
+{
+    return bGameFirstLoaded;
+}
+
+void UMyGameInstance::SetGameLoaded()
+{
+    bGameFirstLoaded = true;
+    SaveGame();
+}
+
+void UMyGameInstance::InitializeSaveGame()
 {
     LoadGame();
 }
