@@ -20,7 +20,7 @@ AMainCharacter::AMainCharacter() :
 	bFireButtonPressed(false),
 	MaxHeath(3.f),
 	Health(3.f),
-	CharacterSpeed(300.f),
+	CharacterSpeed(400.f),
 	GunFireSpeed(.5f),
 	GameScore(0),
 	NextLevelScore(35),
@@ -181,7 +181,7 @@ void AMainCharacter::CheckScore()
 		onUpgradePending.Broadcast();
 	}
 
-	if ((GameScore % 24 == 0 && GameScore < 200) || (GameScore % 80 == 0 && GameScore > 800)) {
+	if ((GameScore % 20 == 0 && GameScore < 200) || (GameScore % 80 == 0 && GameScore < 350 && GameScore > 200)) {
 		EnemySpawnerReference->IncreaseSpeedOfGame();
 	}
 }
@@ -218,13 +218,13 @@ void AMainCharacter::IncreaseCharacterSpeed()
 {
 	switch (CharacterSpeedLevel) {
 	case 0:
-		CharacterSpeed = 400.f;
-		break;
-	case 1:
 		CharacterSpeed = 500.f;
 		break;
-	case 2:
+	case 1:
 		CharacterSpeed = 550.f;
+		break;
+	case 2:
+		CharacterSpeed = 600.f;
 		break;
 	default:
 		break;
@@ -526,7 +526,6 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMainCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AMainCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AMainCharacter::FireButtonReleased);
-	//PlayerInputComponent->BindAction("EKey", IE_Pressed, this, &AMainCharacter::AddDashing);
 	PlayerInputComponent->BindAction("SpaceBar", IE_Pressed, this, &AMainCharacter::Dash);
 }
 

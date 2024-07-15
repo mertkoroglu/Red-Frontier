@@ -162,7 +162,7 @@ void AEnemy::DestroyEnemy()
 
 void AEnemy::MultiplySpeed()
 {
-	if (MainCharacter->GetGameScore() > 500 && MainCharacter->GetGameScore() < 800) {
+	/*if (MainCharacter->GetGameScore() > 500 && MainCharacter->GetGameScore() < 800) {
 		Speed = Speed + Speed * 0.1;
 	}
 	else if (MainCharacter->GetGameScore() > 800 && MainCharacter->GetGameScore() < 1200) {
@@ -170,7 +170,9 @@ void AEnemy::MultiplySpeed()
 	}
 	else if (MainCharacter->GetGameScore() > 1200) {
 		Speed = Speed + Speed;
-	}
+	}*/
+
+	Speed = Speed + MainCharacter->GetGameScore() / 10.f;
 
 	SetWalkSpeed(Speed);
 }

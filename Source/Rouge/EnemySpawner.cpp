@@ -53,12 +53,6 @@ void AEnemySpawner::SpawnEnemy()
                     FMath::Abs(RandomPoint.X - ActorLocation.X) >= MinDistanceFromCharacterX || FMath::Abs(RandomPoint.Y - ActorLocation.Y) >= MinDistanceFromCharacterY)
                 {
                     SpawnLocations.Add(RandomPoint);
-                    
-                    /*if (GEngine)
-                    {
-                        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Valid Point: %s"), *RandomPoint.ToString()));
-                        DrawDebugPoint(GetWorld(), RandomPoint, 10.0f, FColor::Green, false, 5.0f);
-                    }*/
                 }
             }
         }
