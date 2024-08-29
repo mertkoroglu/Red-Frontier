@@ -12,6 +12,10 @@ A roguelike game developed using Unreal Engine 5. Dive into the year 2156 and re
 - **Roguelike Challenge:** Experience the thrill of starting fresh with each run as all progress resets upon death.
 - **Highscore Pursuit:** Test your skills and strive to exceed your highscore with each new attempt.
 
+### Gameplay Overview
+[![Red Frontier Gameplay](https://img.youtube.com/vi/faRTGfWKBpk/0.jpg)](https://www.youtube.com/watch?v=faRTGfWKBpk)
+
+
 ## Screenshots:
 ![Screenshot (198)](https://github.com/user-attachments/assets/9ae276a8-e3a0-44c1-accc-934495734419)
 ![Screenshot (200)](https://github.com/user-attachments/assets/d212a0c4-4022-4604-8519-87b7a266957e)
