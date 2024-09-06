@@ -7,7 +7,6 @@
 #include "Projectile.h"
 #include "EnemySpawner.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Blueprint/UserWidget.h"
 #include "Sound/SoundCue.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
